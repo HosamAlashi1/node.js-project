@@ -14,18 +14,11 @@ app.use(morgan('tiny'));
 // mongodb connection
 connectDB();
 
-
-
 // parse request to body-parser 
 app.use(bodyParser.urlencoded({extended:true}))
 
-// load assets
-// app.use('/css',express.static(path.resolve(__dirname,"./assets/css")))
-// app.use('/js',express.static(path.resolve(__dirname,"assets/js")))
-
 // to can reach any image in uplaod folder
-app.use("/upload",express.static('upload'))
-
+app.use("/uploads",express.static('uploads'))
 
 // load routers
 app.use('/',require('./server/routes/router'));
