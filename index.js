@@ -14,13 +14,15 @@ app.use(morgan('tiny'));
 // mongodb connection
 connectDB();
 
+
 // parse request to body-parser 
 app.use(bodyParser.urlencoded({extended:true}))
 
 // to can reach any image in uplaod folder
 app.use("/uploads",express.static('uploads'))
 
+app.use(express.json());
 // load routers
-app.use('/',require('./server/routes/router'));
+app.use('/api',require('./server/routes/router'));
 
 app.listen(PORT,()=>{console.log(`Server is running on http://localhost:${PORT}`)})
