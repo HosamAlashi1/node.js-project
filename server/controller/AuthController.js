@@ -160,17 +160,21 @@ exports.me = async (req, res) => {
     res.status(400).send({ message: "Content can not be empty!" });
     return;
   }
-  const user = await getUserByToken(req.body.token);
-  const picUrl = getUrlImage(user.pic_url);
+  try {
+    const user = await getUserByToken(req.body.token);
+    const picUrl = getUrlImage(user.pic_url);
 
-  const userData = {
-    id: user._id,
-    full_name: user.full_name,
-    user_name: user.user_name,
-    email: user.email,
-    phone: "",
-    is_new_user: false,
-    picUrl: picUrl,
-  };
-  res.status(200).send(userData);
+    const userData = {
+      id: user._id,
+      fullname: user.full_name,
+      username: user.user_name,
+      email: user.email,
+      phone: "",
+      is_new_user: false,
+      picUrl: picUrl,
+    };
+    res.status(200).send(userData);
+  } catch (error) {
+    res.status(400).send();
+  }
 };

@@ -3,7 +3,7 @@ var { checkType, upload ,deleteFolderAndChildren} = require("../../modules/folde
 
 // add folder
 exports.addFolder = async (req, res) => {
-  if (!req.body) {
+  if (!req.body || !req.body.user_id || !req.body.parent_id || !req.body.name) {
     res.status(400).send({ message: "Content can not be empty!" });
     return;
   }
@@ -12,6 +12,9 @@ exports.addFolder = async (req, res) => {
       name: req.body.name,
       parent_id: req.body.parent_id,
       type: 1,
+      pic_name: "",
+      pic_size: "",
+      description: "",
       user_id: req.body.user_id,
     });
     await folder.save();
@@ -29,7 +32,7 @@ exports.addImage = async (req, res) => {
     if (err) {
       return res.status(400).send({ message: "Failed to upload file" });
     }
-    if (!req.body) {
+    if (!req.body || !req.body.user_id || !req.body.parent_id || !req.body.name || !req.files) {
       res.status(400).send({ message: "Content can not be empty!" });
       return;
     }
