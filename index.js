@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 const connectDB = require('./server/database/connection');
 const app = express();
 
@@ -14,6 +15,8 @@ app.use(morgan('tiny'));
 // mongodb connection
 connectDB();
 
+// connection with front side
+app.use(cors());
 
 // parse request to body-parser 
 app.use(bodyParser.urlencoded({extended:true}))

@@ -26,7 +26,7 @@ const fileFilter = function (req, file, cb) {
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-}).single("pic_url");
+}).single("file");
 
 
 module.exports = upload;

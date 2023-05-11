@@ -3,7 +3,7 @@ var { checkType, upload ,deleteFolderAndChildren} = require("../../modules/folde
 
 // add folder
 exports.addFolder = async (req, res) => {
-  if (!req.body || !req.body.user_id || !req.body.parent_id || !req.body.name) {
+  if (!req.body) {
     res.status(400).send({ message: "Content can not be empty!" });
     return;
   }
@@ -32,7 +32,7 @@ exports.addImage = async (req, res) => {
     if (err) {
       return res.status(400).send({ message: "Failed to upload file" });
     }
-    if (!req.body || !req.body.user_id || !req.body.parent_id || !req.body.name || !req.files) {
+    if (!req.body) {
       res.status(400).send({ message: "Content can not be empty!" });
       return;
     }
@@ -74,8 +74,10 @@ exports.list = async (req, res) => {
         // Filter folders by id, and name containing q
         var folders = await Folderdb.find({
           user_id: id,
-          name: { $regex: q, $options: "i" },
-          description: { $regex: q, $options: "i" },
+          $or: [
+            { name: { $regex: q, $options: "i" } },
+            { description: { $regex: q, $options: "i" } },
+          ],
           parent_id: "0", // 0 for hame page
         })
           .skip(skipIndex)
@@ -86,8 +88,10 @@ exports.list = async (req, res) => {
         var folders = await Folderdb.find({
           user_id: id,
           type: type,
-          name: { $regex: q, $options: "i" },
-          description: { $regex: q, $options: "i" },
+          $or: [
+            { name: { $regex: q, $options: "i" } },
+            { description: { $regex: q, $options: "i" } },
+          ],
           parent_id: "0", // 0 for hame page
         })
           .skip(skipIndex)
@@ -95,19 +99,20 @@ exports.list = async (req, res) => {
           .exec();
       }
       var allFolders = [];
-      for (let i = 0; i < folders.length; i++) {
+      const count = folders.length;
+      for (let i = 0; i < count; i++) {
         var dataFolder = {
           id: folders[i]._id,
           name: folders[i].name,
           parent_id: folders[i].parent_id,
           type: folders[i].type,
-          pic_path: folders[i].pic_path,
+          pic_name: folders[i].pic_name,
           pic_size: folders[i].pic_size,
           description: folders[i].description,
         };
         allFolders.push(dataFolder);
       }
-      res.status(200).send(allFolders);
+      res.status(200).send({ count, data: allFolders });
     }
   } catch (err) {
     res.status(400).send();
@@ -130,8 +135,10 @@ exports.list2 = async (req, res) => {
         var folders = await Folderdb.find({
           user_id: id,
           parent_id: parent_id,
-          name: { $regex: q, $options: "i" },
-          description: { $regex: q, $options: "i" },
+          $or: [
+            { name: { $regex: q, $options: "i" } },
+            { description: { $regex: q, $options: "i" } },
+          ],
         })
           .skip(skipIndex)
           .limit(size)
@@ -142,28 +149,51 @@ exports.list2 = async (req, res) => {
           user_id: id,
           type: type,
           parent_id: parent_id,
-          name: { $regex: q, $options: "i" },
-          description: { $regex: q, $options: "i" },
+          $or: [
+            { name: { $regex: q, $options: "i" } },
+            { description: { $regex: q, $options: "i" } },
+          ],
         })
           .skip(skipIndex)
           .limit(limit)
           .exec();
       }
       var allFolders = [];
-      for (let i = 0; i < folders.length; i++) {
+      const count = folders.length;
+      for (let i = 0; i < count; i++) {
         var dataFolder = {
           id: folders[i]._id,
           name: folders[i].name,
           parent_id: folders[i].parent_id,
           type: folders[i].type,
-          pic_path: folders[i].pic_path,
+          pic_name: folders[i].pic_name,
           pic_size: folders[i].pic_size,
           description: folders[i].description,
         };
         allFolders.push(dataFolder);
       }
-      res.status(200).send(allFolders);
+      res.status(200).send({ count, data: allFolders });
     }
+  } catch (err) {
+    res.status(400).send();
+  }
+};
+
+// find one by id : image or folder
+exports.get = async (req ,res) => {
+  try {
+    const id = req.params.id;
+    const folder = await Folderdb.findById(id);
+    var data = {
+      id: folder._id,
+      name: folder.name,
+      parent_id: folder.parent_id,
+      type: folder.type,
+      pic_name: folder.pic_name,
+      pic_size: folder.pic_size,
+      description: folder.description,
+    };
+    res.status(200).send(data);
   } catch (err) {
     res.status(400).send();
   }

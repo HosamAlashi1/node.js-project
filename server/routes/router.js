@@ -38,6 +38,7 @@ route.post('/folder/add-image',folderController.addImage);
 route.post('/folder/add-folder',folderController.addFolder);
 route.get('/folder/:id/list1',folderController.list);
 route.get('/folder/:id/list2',folderController.list2);
+route.get('/folder/:id/get',folderController.get);
 route.post('/folder/:id/edit',folderController.rename);
 route.post('/folder/delete',folderController.delete);
 route.post('/folder/move',folderController.move);
