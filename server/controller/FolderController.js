@@ -1,5 +1,9 @@
 var { Folderdb } = require("../model");
-var { checkType, upload ,deleteFolderAndChildren} = require("../../modules/folder");
+var {
+  checkType,
+  upload,
+  deleteFolderAndChildren,
+} = require("../../modules/folder");
 
 // add folder
 exports.addFolder = async (req, res) => {
@@ -78,11 +82,16 @@ exports.list = async (req, res) => {
             { name: { $regex: q, $options: "i" } },
             { description: { $regex: q, $options: "i" } },
           ],
-          parent_id: "0", // 0 for hame page
+          parent_id: "0", // 0 for home page
         })
+          .sort({ _id: -1 }) // Sort by createdAt field in descending order
           .skip(skipIndex)
           .limit(size)
           .exec();
+        var count = await Folderdb.countDocuments({
+          user_id: id,
+          parent_id: "0", // 0 for home page
+        });
       } else {
         // Filter folders by id, type, and name containing q
         var folders = await Folderdb.find({
@@ -92,15 +101,21 @@ exports.list = async (req, res) => {
             { name: { $regex: q, $options: "i" } },
             { description: { $regex: q, $options: "i" } },
           ],
-          parent_id: "0", // 0 for hame page
+          parent_id: "0", // 0 for home page
         })
+          .sort({ _id: -1 }) // Sort by createdAt field in descending order
           .skip(skipIndex)
           .limit(size)
           .exec();
+        var count = await Folderdb.countDocuments({
+          user_id: id,
+          type: type,
+          parent_id: "0", // 0 for home page
+        });
       }
       var allFolders = [];
-      const count = folders.length;
-      for (let i = 0; i < count; i++) {
+      const record = folders.length;
+      for (let i = 0; i < record; i++) {
         var dataFolder = {
           id: folders[i]._id,
           name: folders[i].name,
@@ -112,7 +127,7 @@ exports.list = async (req, res) => {
         };
         allFolders.push(dataFolder);
       }
-      res.status(200).send({ count, data: allFolders });
+      res.status(200).send({ count, record, data: allFolders });
     }
   } catch (err) {
     res.status(400).send();
@@ -140,9 +155,14 @@ exports.list2 = async (req, res) => {
             { description: { $regex: q, $options: "i" } },
           ],
         })
+          .sort({ _id: -1 }) // Sort by createdAt field in descending order
           .skip(skipIndex)
           .limit(size)
           .exec();
+        var count = await Folderdb.countDocuments({
+          user_id: id,
+          parent_id:parent_id
+        });
       } else {
         // Filter folders by id, type, and parent_id and name containing q
         var folders = await Folderdb.find({
@@ -154,13 +174,19 @@ exports.list2 = async (req, res) => {
             { description: { $regex: q, $options: "i" } },
           ],
         })
+          .sort({ _id: -1 }) // Sort by createdAt field in descending order
           .skip(skipIndex)
-          .limit(limit)
+          .limit(size)
           .exec();
+        var count = await Folderdb.countDocuments({
+          user_id: id,
+          type: type,
+          parent_id: parent_id
+        });
       }
       var allFolders = [];
-      const count = folders.length;
-      for (let i = 0; i < count; i++) {
+      const record = folders.length;
+      for (let i = 0; i < record; i++) {
         var dataFolder = {
           id: folders[i]._id,
           name: folders[i].name,
@@ -172,7 +198,7 @@ exports.list2 = async (req, res) => {
         };
         allFolders.push(dataFolder);
       }
-      res.status(200).send({ count, data: allFolders });
+      res.status(200).send({ count, record, data: allFolders });
     }
   } catch (err) {
     res.status(400).send();
@@ -180,7 +206,7 @@ exports.list2 = async (req, res) => {
 };
 
 // find one by id : image or folder
-exports.get = async (req ,res) => {
+exports.get = async (req, res) => {
   try {
     const id = req.params.id;
     const folder = await Folderdb.findById(id);
@@ -226,12 +252,11 @@ exports.rename = async (req, res) => {
   }
 };
 
-// delete API 
+// delete API
 exports.delete = async (req, res) => {
   try {
     const selected = req.body.selected;
-    const folderIds = eval(selected); // parse the string as an array
-
+    const folderIds = eval(selected);
     // Delete each folder and its children
     for (let i = 0; i < folderIds.length; i++) {
       const folderId = folderIds[i];
@@ -253,7 +278,7 @@ exports.move = async (req, res) => {
 
   try {
     var selectedId = req.body.selected;
-    const newParent_id = req.body.id;
+    const newParent_id = req.params.id;
     selectedId = eval(selectedId); // parse the string as an array
     for (let i = 0; i < selectedId.length; i++) {
       const filter = { _id: selectedId[i] };

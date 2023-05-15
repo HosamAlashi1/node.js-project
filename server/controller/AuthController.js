@@ -38,7 +38,6 @@ exports.register = (req, res) => {
           token: createToken,
           created_token: Date.now(),
           destroy_token: oneHourLater,
-          verification_code: "",
           password: hashedPassword,
         });
         await user.save();
@@ -115,6 +114,7 @@ exports.forgetPassword = async (req, res) => {
     };
     const result = await Userdb.updateOne(filter, update);
     if (result) {
+      console.log(verifCode);
       res.status(200).send(verifCode);
     }
     throw err;
@@ -130,8 +130,8 @@ exports.resetPassword = async (req, res) => {
   }
   try {
     const password = req.body.password;
-    const confirm_password = req.body.confirm_password;
-    const verifCode = req.body.verification_code;
+    const confirm_password = req.body.confirmPassword;
+    const verifCode = req.body.verificationCode;
     const user = await getUserByVerifCode(verifCode);
     if (confirm_password != password) {
       res.sendStatus(400);
