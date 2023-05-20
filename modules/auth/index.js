@@ -5,7 +5,7 @@ module.exports = {
     getUser:require('./getUserByEmail'),
     generateRandNum:require('./generateRandomNumber'),
     getUserByVerifCode:require('./getUserByverifCode'),
-    getUserByToken:require('./getUserByToken'),
+    getUserById:require('./getUserById'),
     upload:require('./uploadImage'),
     getUrlImage:require('./getImage'),
     oneHourLater:require('./oneHourLater'),

@@ -6,7 +6,7 @@ const {
   getUser,
   generateRandNum,
   getUserByVerifCode,
-  getUserByToken,
+  getUserById,
   upload,
   getUrlImage,
   oneHourLater,
@@ -24,23 +24,30 @@ exports.register = (req, res) => {
     const imgName = req.file.filename;
     try {
       const unique = await uniqueniss(user_name, email);
-      const createToken = await createAuthToken(req.body.user_name, req, res); // create token
-
       if (unique && password == confirm_password) {
-        const hashedPassword = await bcrypt.hash(password, 10); // hash the password
+        const hashedPassword = await bcrypt.hash(password, 10); // long time process
 
-        const user = new Userdb({
+        const user = await new Userdb({
           full_name: req.body.full_name,
           user_name: req.body.user_name,
           email: req.body.email,
           phone: "",
           pic_url: imgName,
-          token: createToken,
-          created_token: Date.now(),
-          destroy_token: oneHourLater,
           password: hashedPassword,
-        });
-        await user.save();
+        }).save();
+
+        const createToken = await createAuthToken(user._id, req, res); // create token
+        // add token for user
+        const filter = { _id: user._id }; // Specify the Uesr ID
+        const update = {
+          $set: {
+            token: createToken,
+            created_token: Date.now(),
+            destroy_token: oneHourLater,
+          },
+        };
+        await Userdb.updateOne(filter, update);
+
         res.status(200).send();
       } else {
         res.sendStatus(400);
@@ -65,8 +72,8 @@ exports.login = async (req, res) => {
     if (!user || !passwordMatch) {
       res.sendStatus(400);
     }
-    const createToken = await createAuthToken(user.user_name, req, res); // create token
-    // Update the document
+    const createToken = await createAuthToken(user._id, req, res); // create token
+    // Update token
     const filter = { _id: user._id }; // Specify the Uesr ID
     const update = {
       $set: {
@@ -161,9 +168,9 @@ exports.me = async (req, res) => {
     return;
   }
   try {
-    const user = await getUserByToken(req.body.token);
+    console.log(req._id);
+    const user = await getUserById(req._id); // get user through token(id) for this user
     const picUrl = getUrlImage(user.pic_url);
-
     const userData = {
       id: user._id,
       fullname: user.full_name,

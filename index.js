@@ -1,9 +1,8 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const morgan = require("morgan");
-const bodyParser = require("body-parser");
-const cors = require("cors");
 const connectDB = require("./server/database/connection");
+const middleware = require('./middlewares');
 const app = express();
 
 dotenv.config({ path: "config.env" });
@@ -15,16 +14,9 @@ app.use(morgan("tiny"));
 // mongodb connection
 connectDB();
 
-// connection with front side
-app.use(cors());
+// middlewares
+middleware.global(app);
 
-// parse request to body-parser
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// to can reach any image in uplaod folder
-app.use("/uploads", express.static("uploads"));
-
-app.use(express.json());
 // load routers
 app.use("/api", require("./server/routes/router"));
 

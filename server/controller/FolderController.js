@@ -1,9 +1,10 @@
-var { Folderdb } = require("../model");
-var {
+const { Folderdb } = require("../model");
+const {
   checkType,
   upload,
   deleteFolderAndChildren,
 } = require("../../modules/folder");
+const { getUserById } = require("../../modules/auth");
 
 // add folder
 exports.addFolder = async (req, res) => {
@@ -12,6 +13,7 @@ exports.addFolder = async (req, res) => {
     return;
   }
   try {
+    const user = await getUserById(req._id); // get user through token(id) for this user
     const folder = new Folderdb({
       name: req.body.name,
       parent_id: req.body.parent_id,
@@ -19,7 +21,7 @@ exports.addFolder = async (req, res) => {
       pic_name: "",
       pic_size: "",
       description: "",
-      user_id: req.body.user_id,
+      user_id: user._id,
     });
     await folder.save();
     res.status(200).send();
@@ -41,6 +43,7 @@ exports.addImage = async (req, res) => {
       return;
     }
     try {
+      const user = await getUserById(req._id); // get user through token(id) for this userx
       const len = req.files.length;
       for (let i = 0; i < len; i++) {
         const folder = new Folderdb({
@@ -50,7 +53,7 @@ exports.addImage = async (req, res) => {
           pic_name: req.files[i].filename,
           pic_size: req.files[i].size,
           description: req.body.description,
-          user_id: req.body.user_id,
+          user_id: req._id,
         });
         await folder.save();
       }
@@ -67,8 +70,9 @@ exports.addImage = async (req, res) => {
 // get all fields from the folders collections in home page
 exports.list = async (req, res) => {
   try {
-    if (req.params.id && req.query.type) {
-      const id = req.params.id; // user id
+    const user = await getUserById(req._id); // get user through token(id) for this user
+    if (user._id && req.query.type) {
+      const id = user._id; // user id
       const type = checkType(req.query.type);
       const q = req.query.q;
       const page = parseInt(req.query.page) || 1; // page number, default to 1
@@ -137,8 +141,9 @@ exports.list = async (req, res) => {
 // get all fields from the folders collections have a parnet id
 exports.list2 = async (req, res) => {
   try {
-    if (req.params.id && req.query.type) {
-      const id = req.params.id; // user id
+    const user = await getUserById(req._id); // get user through token(id) for this user
+    if (user._id && req.query.type) {
+      const id = user._id; // user id
       const type = checkType(req.query.type);
       const q = req.query.q || "";
       const parent_id = req.query.parent_id;
@@ -161,7 +166,7 @@ exports.list2 = async (req, res) => {
           .exec();
         var count = await Folderdb.countDocuments({
           user_id: id,
-          parent_id:parent_id
+          parent_id: parent_id,
         });
       } else {
         // Filter folders by id, type, and parent_id and name containing q
@@ -181,7 +186,7 @@ exports.list2 = async (req, res) => {
         var count = await Folderdb.countDocuments({
           user_id: id,
           type: type,
-          parent_id: parent_id
+          parent_id: parent_id,
         });
       }
       var allFolders = [];
@@ -209,7 +214,11 @@ exports.list2 = async (req, res) => {
 exports.get = async (req, res) => {
   try {
     const id = req.params.id;
-    const folder = await Folderdb.findById(id);
+    const user = await getUserById(req._id); // get user through token(id) for this user
+    const folder = await Folderdb.findOne({
+      _id: id, // folder id
+      user_id: user._id,
+    });
     var data = {
       id: folder._id,
       name: folder.name,
@@ -219,7 +228,7 @@ exports.get = async (req, res) => {
       pic_size: folder.pic_size,
       description: folder.description,
     };
-    res.status(200).send(data);
+    return res.status(200).send(data);
   } catch (err) {
     res.status(400).send();
   }
@@ -234,7 +243,6 @@ exports.rename = async (req, res) => {
   try {
     const id = req.params.id;
     const newName = req.query.newName;
-    // const folder = await getFolder(id);
     const filter = { _id: id };
     const update = {
       $set: {

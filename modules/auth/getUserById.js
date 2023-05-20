@@ -1,8 +1,8 @@
 var { Userdb } = require("../../server/model");
 
-const getUser = async (token) => {
+const getUser = async (id) => {
   try {
-    const user = await Userdb.findOne({token: token});
+    const user = await Userdb.findOne({_id: id});
     if (user) {
       return user;
     } else {
